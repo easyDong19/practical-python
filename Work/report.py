@@ -1,18 +1,17 @@
 # report.py
 
 import fileparse
-import stock
+from stock import Stock
 import tableformat
+from portfolio import Portfolio
 
-def read_portfolio(filename):
+def read_portfolio(filename, **opts):
     '''
     Read a stock portfolio file into a list of dictionaries with keys
     name, shares, and price.
     '''
     with open(filename) as lines:
-        portdicts = fileparse.parse_csv(lines, select=['name','shares','price'], types=[str,int,float])
-        portfolio = [stock.Stock(d['name'],d['shares'],d['price'])for d in portdicts]
-        return portfolio
+        return Portfolio.from_csv(lines,**opts)
 
 def read_prices(filename):
     '''
@@ -21,22 +20,22 @@ def read_prices(filename):
     with open(filename) as lines:
         return dict(fileparse.parse_csv(lines, types=[str,float], has_headers=False))
 
-def make_report_data(portfolio,prices):
+def make_report_data(portfolio, prices):
     '''
     Make a list of (name, shares, price, change) tuples given a portfolio list
     and prices dictionary.
     '''
     rows = []
-    for stock in portfolio:
-        current_price = prices[stock['name']]
-        change = current_price - stock['price']
-        summary = (stock['name'], stock['shares'], current_price, change)
+    for s in portfolio:
+        current_price = prices[s.name]
+        change = current_price - s.price
+        summary = (s.name, s.shares, current_price, change)
         rows.append(summary)
     return rows
 
-def print_report(reportdata,formatter):
+def print_report(reportdata, formatter):
     '''
-    (name, shares, price, change) 튜플의 리스트로부터 보기 좋게 포매팅한 테이블을 프린팅.
+    Print a nicely formated table from a list of (name, shares, price, change) tuples.
     '''
     formatter.headings(['Name','Shares','Price','Change'])
     for name, shares, price, change in reportdata:
@@ -45,23 +44,23 @@ def print_report(reportdata,formatter):
 
 def portfolio_report(portfoliofile, pricefile, fmt='txt'):
     '''
-    주어진 포트폴리오와 가격 데이터 파일을 가지고 주식 보고서를 작성.
+    Make a stock report given portfolio and price data files.
     '''
-    # 데이터 파일 읽기
+    # Read data files
     portfolio = read_portfolio(portfoliofile)
     prices = read_prices(pricefile)
 
-    # 보고서 데이터 생성
+    # Create the report data
     report = make_report_data(portfolio, prices)
 
-    # 프린트
+    # Print it out
     formatter = tableformat.create_formatter(fmt)
     print_report(report, formatter)
 
 def main(args):
-    if len(args) != 3:
-        raise SystemExit('Usage: %s portfile pricefile' % args[0])
-    portfolio_report(args[1], args[2])
+    if len(args) != 4:
+        raise SystemExit('Usage: %s portfile pricefile format' % args[0])
+    portfolio_report(args[1], args[2], args[3])
 
 if __name__ == '__main__':
     import sys

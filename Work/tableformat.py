@@ -3,13 +3,13 @@ class TableFormatter:
         '''
         테이블 헤딩을 반환
         '''
-    raise NotImplementedError()
+        raise NotImplementedError()
 
     def row(self, rowdata):
         '''
         테이블 데이터의 단일 행을 반환
         '''
-    raise NotImplementedError()
+        raise NotImplementedError()
 
 
 class TextTableFormatter(TableFormatter):
